@@ -124,7 +124,7 @@ public class AventurierGameViewImpl extends HorizontalLayout {
 	public Button addResetButton() {
 		Button resetButton = new Button("Réinitialiser");
     	resetButton.addClickListener(event -> {
-    		clearViews();
+    		clearViews(false);
     	});
     	return resetButton;
 	}
@@ -139,7 +139,7 @@ public class AventurierGameViewImpl extends HorizontalLayout {
 	   	liveModeSwitchButton.addValueChangeListener(event -> {
 	          boolean isChecked = event.getValue();
 	          isLiveMode = isChecked;
-	          clearViews();
+	          clearViews(true);
 	    });
 	
 	    return liveModeSwitchButton;
@@ -352,14 +352,17 @@ public class AventurierGameViewImpl extends HorizontalLayout {
     }
 
 	
-	public void clearViews() {
+   public void clearViews(boolean isFromSwitch) {
+	if(!isFromSwitch) {
 		liveModeSwitchButton.setValue(false);
-		nextPositionHolderTextArea.clear();
-		submitPositionButton.setText("Soumettre position");
-		positionLabel.setText("");
-		gridSelectedPositionPoint = null;
-		availableSpotsGrid.deselectAll();
-		mapHolderCustomTextArea.addTextFromLines(this.map.getLines());
 	}
+	nextPositionHolderTextArea.clear();
+	submitPositionButton.setText("Soumettre position");
+	positionLabel.setText("");
+	gridSelectedPositionPoint = null;
+	availableSpotsGrid.deselectAll();
+	mapHolderCustomTextArea.addTextFromLines(this.map.getLines());
+    }
+
 
 }
