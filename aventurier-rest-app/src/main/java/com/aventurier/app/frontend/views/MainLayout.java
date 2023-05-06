@@ -1,6 +1,5 @@
 package com.aventurier.app.frontend.views;
 
-import com.aventurier.app.backend.business.service.AventurierGameFacadeService;
 import com.vaadin.flow.component.applayout.AppLayout;
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.router.PageTitle;

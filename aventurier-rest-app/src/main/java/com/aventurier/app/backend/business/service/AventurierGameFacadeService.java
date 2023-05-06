@@ -22,12 +22,19 @@ public class AventurierGameFacadeService {
 	@Autowired
 	PositionResolverService positionResolverService;
 	
+	@Autowired
+	GenerateRandomMapService generateRandomMapService;
+	
 	 public Map readFileAsString() {		
 		 return readFileService.readFileAsString();
 	 }
 
 	public Optional<Point> resolvePosition(Map map, Point selectedPosition, String pathToFollow) {
 		return positionResolverService.resolveNextPos(map, selectedPosition, pathToFollow);
+	}
+
+	public Map generateRandomMap() {
+		return generateRandomMapService.generateNewRandomMap();
 	}
 
 }

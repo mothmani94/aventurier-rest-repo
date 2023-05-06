@@ -33,6 +33,9 @@ public class CustomTextArea extends VerticalLayout {
 			Div line = new Div();
             for (char c : str.toCharArray()) {
                 String charAsString = Character.toString(c);
+                if(" ".equals(charAsString)) {
+                	charAsString = "-";
+                }
                 Span characterSpan = new Span(charAsString);
                 characterSpan.setId(""+index);
                 characterSpan.getElement().getStyle().set("white-space", "pre");
@@ -44,6 +47,7 @@ public class CustomTextArea extends VerticalLayout {
 		this.lines = lines;
 	}
 	
+	/*TO DO improve func*/
 	public void setColorAtIndex(int x, int y) {
     
 		parentDiv.removeAll();
@@ -55,6 +59,9 @@ public class CustomTextArea extends VerticalLayout {
 			int k =0;
             for (char chr : str.toCharArray()) {
                 String charAsString = Character.toString(chr);
+                if(" ".equals(charAsString)) {
+                	charAsString = "-";
+                }
                 Span characterSpan = new Span(charAsString);
                 characterSpan.getElement().getStyle().set("white-space", "pre");
                 line.add(characterSpan);

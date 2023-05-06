@@ -32,6 +32,10 @@ public class AventurierGameController {
 		return  facade.resolvePosition(map, selectedPosition,pathToFollow );
 	}
 
+	public Map generateRandomMap() {
+		
+		return facade.generateRandomMap();
+	}
 
 	public AventurierGameViewImpl getView() {
 		return view;
@@ -40,6 +44,8 @@ public class AventurierGameController {
 	public void setView(AventurierGameViewImpl view) {
 		this.view = view;
 	}
+
+	
 
 	
 

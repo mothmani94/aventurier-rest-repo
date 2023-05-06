@@ -1,5 +1,8 @@
 package com.aventurier.app.frontend.views.aventuriergameview;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 
 import com.aventurier.app.backend.business.enums.CardinalDirectionsEnum;
@@ -44,12 +47,10 @@ public class AventurierGameViewImpl extends HorizontalLayout  implements Compone
 	private Point gridSelectedPositionPoint;    
 	private Grid<Point> availableSpotsGrid;
 	private CustomTextArea mapHolderCustomTextArea;
-
 	private Label positionLabel;
-
 	private boolean isLiveMode;
+	private Button generateRandomMapButton;
 
-	private Button generateRandomMap;
  
     public AventurierGameViewImpl(AventurierGameController controller) {
     	
@@ -58,7 +59,6 @@ public class AventurierGameViewImpl extends HorizontalLayout  implements Compone
        this.controller.setView(this);
 
        initViews();
-      
        
        initData(this.controller.readFile());
     }
@@ -106,7 +106,7 @@ public class AventurierGameViewImpl extends HorizontalLayout  implements Compone
         checkboxWrapper.setWidthFull();
         checkboxWrapper.setJustifyContentMode(JustifyContentMode.CENTER);
         
-        HorizontalLayout availableSpotsGridWrapper = new HorizontalLayout(addAvaibleSpotsGrid());
+        HorizontalLayout availableSpotsGridWrapper = new HorizontalLayout(addAvailabeSpotsGrid());
         availableSpotsGridWrapper.setWidthFull();
         availableSpotsGridWrapper.setJustifyContentMode(JustifyContentMode.CENTER);
         
@@ -161,13 +161,12 @@ public class AventurierGameViewImpl extends HorizontalLayout  implements Compone
 	          boolean isChecked = event.getValue();
 	          isLiveMode = isChecked;
 	          clearViews(true);
-	          submitPositionButton.setEnabled(false);
 	    });
 	
 	    return liveModeSwitchButton;
    }
     
-    public VerticalLayout addAvaibleSpotsGrid() {
+    public VerticalLayout addAvailabeSpotsGrid() {
     	
     	VerticalLayout layout  = new VerticalLayout();
    
@@ -288,30 +287,43 @@ public class AventurierGameViewImpl extends HorizontalLayout  implements Compone
     	mapHolderCustomTextArea = new CustomTextArea();
     	layout.add(mapHolderCustomTextArea);
         layout.setAlignSelf(Alignment.CENTER, mapHolderCustomTextArea);
-
     	
-        generateRandomMap = new Button("Generate random map");
-        layout.add(generateRandomMap);
-        layout.setAlignSelf(Alignment.CENTER, generateRandomMap);
-
-
+        generateRandomMapButton = new Button("Generate random map");
+        generateRandomMapButton.setId("random-map-button");
+        generateRandomMapButton.addClickListener(this);
+        layout.add(generateRandomMapButton);
+        layout.setAlignSelf(Alignment.CENTER, generateRandomMapButton);
+        
 		return layout;
     }
 
 	
    public void clearViews(boolean isFromSwitch) {
-	   
-		if(!isFromSwitch) {
-			liveModeSwitchButton.setValue(false);
-			submitPositionButton.setEnabled(false);
-		}
-    	positionLabel.setText("Choose a starting position");
-		nextPositionHolderTextArea.clear();
-		submitPositionButton.setText("Submit position");
+	  
+	  // action from RESET button and checkbox 
+	  if(isLiveMode && isFromSwitch) {
+		  submitPositionButton.setText("Submit position");	 
+		  submitPositionButton.setEnabled(false);
+	  }else {
+		  submitPositionButton.setEnabled(true);
+	  }
+
+	  // action from RESET button
+	  if(!isFromSwitch) {
+	    liveModeSwitchButton.setValue(false);
+		submitPositionButton.setEnabled(false);
+		availableSpotsGrid.setItems(Collections.emptyList());
+		positionLabel.setText("Choose a starting position");
+		submitPositionButton.setText("Submit position");	
 		submitPositionButton.setEnabled(true);
+		nextPositionHolderTextArea.clear();
 		gridSelectedPositionPoint = null;
 		availableSpotsGrid.deselectAll();
 		mapHolderCustomTextArea.addTextFromLines(this.map.getLines());
+		
+	    initData(this.controller.readFile());
+	   }
+	       	
     }
 
 	public void cardinalButtonsCallBack(CardinalDirectionsEnum cardinalDirectionEnum) {
@@ -338,7 +350,21 @@ public class AventurierGameViewImpl extends HorizontalLayout  implements Compone
 	    }
 		    
 	}
+	
+	public void generateRandomMap() {
+		
+		clearViews(false);
+		
+		initData(controller.generateRandomMap());
+		
+	}
+	
+	
 
+	public void resetDefaultMap() {
+		clearViews(false);
+		initData(controller.readFile());
+	}
 
 	@Override
 	public void onComponentEvent(ClickEvent<Button> event) {
@@ -352,6 +378,7 @@ public class AventurierGameViewImpl extends HorizontalLayout  implements Compone
 				case "S-button" -> cardinalButtonsCallBack(CardinalDirectionsEnum.SUD);
 				case "E-button" -> cardinalButtonsCallBack(CardinalDirectionsEnum.EST);
 				case "O-button" -> cardinalButtonsCallBack(CardinalDirectionsEnum.OUEST);
+				case "random-map-button" -> generateRandomMap();
 				default -> throw new IllegalArgumentException("Unexpected value: " + componentId);
 			}
 			
