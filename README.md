@@ -1,23 +1,26 @@
 # aventurier-rest-repo
 
-## Fonctionnalité: 
+## Feature: 
 
-Aventurier-rest est une application web, conçue pour modéliser les déplacements d'un personnage "Aventurier" sur une carte
+Adventurer-rest-app is a web application, designed to model the movements of an "Adventurer" fictionnal character on a map.
 
-## Fonctionnalités de base: 
-Déplacement du personnage sur la carte, selon un chemin déterminer par l'utilisateur de l'application.
+## Core features: 
+Move character on the map, according to specific path determined by the user of the application.
 
-Déplacement temps réel du personnage sur la carte.
+Real-time movement of the character on the map.
 
-## Choix technologique: 
+## Technologies: 
 
 Front-end: VAADIN 24 - flow
 
 Back-end: Spring boot framework
 
-## Lancement de l'application:
+## Run app: 
+Clone project "gh repo clone mothmani94/aventurier-rest-repo"
 
-Pointe sur le projet racine, après éxectue cette commande dans le terminal :"mvn spring-boot:run"
+cd ~/aventurier-rest-repo
+
+Run in terminal :"mvn spring-boot:run"
 
 URL: http://localhost:45612/aventurier
 
