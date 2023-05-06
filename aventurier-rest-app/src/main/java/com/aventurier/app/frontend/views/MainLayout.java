@@ -18,10 +18,7 @@ public class MainLayout extends AppLayout  {
     private static final long serialVersionUID = -4748758151240177628L;
     private H2 viewTitle;
     
-    
-    AventurierGameFacadeService facade;
-
-    public MainLayout(AventurierGameFacadeService facade) {
+    public MainLayout() {
     	
         addHeaderContent();   
         

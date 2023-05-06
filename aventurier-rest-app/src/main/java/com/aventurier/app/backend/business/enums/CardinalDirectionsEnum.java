@@ -30,10 +30,5 @@ public enum CardinalDirectionsEnum {
 			}
 		}
 		return null;
-		
 	}
-
-	
-	
-	
 }

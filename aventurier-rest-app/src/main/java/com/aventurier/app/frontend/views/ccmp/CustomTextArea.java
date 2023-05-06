@@ -4,28 +4,30 @@ import java.util.List;
 
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Span;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 
 /***
  * 
  * @author motmani
  *
  */
-public class CustomTextArea extends Div {
+public class CustomTextArea extends VerticalLayout {
     
     private static final long serialVersionUID = -2896387779935200051L;
 	private List<String> lines;
+	private Div parentDiv;
     
     public CustomTextArea() {
-    	resetDivStyle();
-
-    }
-    
-	public CustomTextArea(String text) {
-        setText(text);
+		
+    	addClassName("border-vertical-layout"); //border
+    	setWidth("230px");
+        
+    	parentDiv = new Div();
+    	add(resetDivStyle());
     }
 		
 	public void addTextFromLines(List<String> lines) {
-		removeAll();
+		parentDiv.removeAll();
 		int index = 0;
 		for (String str : lines) {
 			Div line = new Div();
@@ -37,14 +39,14 @@ public class CustomTextArea extends Div {
                 line.add(characterSpan);
                 index++;
             }
-            add(line);
+            parentDiv.add(line);
         }
 		this.lines = lines;
 	}
 	
 	public void setColorAtIndex(int x, int y) {
     
-		removeAll();
+		parentDiv.removeAll();
 		resetDivStyle();
 		
         int c = 0;
@@ -64,17 +66,17 @@ public class CustomTextArea extends Div {
                 }
                 k++;
             }
-            add(line);
+            parentDiv.add(line);
             c++;
         }
                
     }
 	
-	public void resetDivStyle() {
-		setWidth("215px") ; 
-    	setHeight("520px"); // 460 
-    	getElement().getStyle().set("font-family", "monospace");
-
+	public Div resetDivStyle() {
+		parentDiv.setWidth("215px") ; 
+		parentDiv.setHeight("520px"); // 460 
+		parentDiv.getElement().getStyle().set("font-family", "monospace");
+		return parentDiv;
 	}
 
 }

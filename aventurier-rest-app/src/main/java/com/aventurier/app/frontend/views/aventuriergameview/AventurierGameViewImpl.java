@@ -5,9 +5,10 @@ import java.util.Optional;
 import com.aventurier.app.backend.business.enums.CardinalDirectionsEnum;
 import com.aventurier.app.backend.business.model.Map;
 import com.aventurier.app.backend.business.model.Point;
-import com.aventurier.app.backend.business.service.AventurierGameFacadeService;
 import com.aventurier.app.frontend.views.MainLayout;
 import com.aventurier.app.frontend.views.ccmp.CustomTextArea;
+import com.vaadin.flow.component.ClickEvent;
+import com.vaadin.flow.component.ComponentEventListener;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.grid.Grid;
@@ -27,10 +28,10 @@ import com.vaadin.flow.router.RouteAlias;
  * @author motmani
  *
  */
-@PageTitle("Aventurier")
-@Route(value = "aventurier", layout = MainLayout.class)
+@PageTitle(" The Adventurer game ")
+@Route(value = "adventurer", layout = MainLayout.class)
 @RouteAlias(value = "", layout = MainLayout.class)
-public class AventurierGameViewImpl extends HorizontalLayout {
+public class AventurierGameViewImpl extends HorizontalLayout  implements ComponentEventListener<ClickEvent<Button>> {
 
     private static final long serialVersionUID = -1213258900267954384L;
     
@@ -47,6 +48,8 @@ public class AventurierGameViewImpl extends HorizontalLayout {
 	private Label positionLabel;
 
 	private boolean isLiveMode;
+
+	private Button generateRandomMap;
  
     public AventurierGameViewImpl(AventurierGameController controller) {
     	
@@ -63,9 +66,9 @@ public class AventurierGameViewImpl extends HorizontalLayout {
 
 	public void initData(Map map) {
 		this.map = map;	
-		System.out.println("map all popints >> "+ map.getAllMapPoints().size());
-		System.out.println("map uncrossable points"+map.getUnCrossablePoints().size());
-		System.out.println("crossable "+map.getCrossablePoints().size());
+		System.out.println("[map all popints] >>  "+ map.getAllMapPoints().size());
+		System.out.println("[map uncrossable points] >> "+map.getUnCrossablePoints().size());
+		System.out.println("[map crossable points] >> "+map.getCrossablePoints().size());
 		
         mapHolderCustomTextArea.addTextFromLines(this.map.getLines());
 		availableSpotsGrid.setItems(this.map.getCrossablePoints());
@@ -74,12 +77,27 @@ public class AventurierGameViewImpl extends HorizontalLayout {
 	
 	public void initViews() {
 		
+        /** Parent layout view, wraps part 1 and 2 **/
+        HorizontalLayout parentLayoutWrapper = new HorizontalLayout();
+        parentLayoutWrapper.add(buildViewPart1(), buildViewPart2());
+        parentLayoutWrapper.setWidth("50%");
+        parentLayoutWrapper.setAlignItems(Alignment.CENTER);
+        
+        add(parentLayoutWrapper);
+        setJustifyContentMode(JustifyContentMode.CENTER);
+	}
+	
+	/***
+	 * Build Part-1 view: Map controllers
+	 * @return
+	 */
+	public VerticalLayout buildViewPart1() {
+		
 		VerticalLayout mapControllersLayoutWrapper = new VerticalLayout();
         mapControllersLayoutWrapper.setMargin(false);
         mapControllersLayoutWrapper. setPadding(false);
         
-        
-        // Wrap each component in a HorizontalLayout with width set to full
+        /** Controllers view PART-1 **/
         HorizontalLayout resetButtonWrapper = new HorizontalLayout(addResetButton());
         resetButtonWrapper.setWidthFull();
         resetButtonWrapper.setJustifyContentMode(JustifyContentMode.CENTER);
@@ -102,27 +120,30 @@ public class AventurierGameViewImpl extends HorizontalLayout {
         submitPositionButtonWrapper.setWidthFull();
         submitPositionButtonWrapper.setJustifyContentMode(JustifyContentMode.CENTER);
         
-        // Add the wrapping HorizontalLayouts to the parent mapControllersLayoutWrapper
         mapControllersLayoutWrapper.add(resetButtonWrapper,checkboxWrapper, availableSpotsGridWrapper, buttonsNSEWwrapper, textAreaWrapper, submitPositionButtonWrapper);
         mapControllersLayoutWrapper.setWidthFull();
         mapControllersLayoutWrapper.setJustifyContentMode(JustifyContentMode.CENTER);
+        
+        return mapControllersLayoutWrapper;
 
-        HorizontalLayout mapHolderLayoutWrapper = new HorizontalLayout(buildMapHolder());
-        mapHolderLayoutWrapper.setWidthFull();
-        mapHolderLayoutWrapper.setJustifyContentMode(JustifyContentMode.CENTER);
-        
-        HorizontalLayout parentLayoutWrapper = new HorizontalLayout();
-        parentLayoutWrapper.add(mapControllersLayoutWrapper, mapHolderLayoutWrapper);
-        parentLayoutWrapper.setWidth("50%");
-        parentLayoutWrapper.setAlignItems(Alignment.CENTER);
-        
-        
-        add(parentLayoutWrapper);
-        setJustifyContentMode(JustifyContentMode.CENTER);
 	}
 	
+	/***
+	 * Build Part-2 view: Map and random map generator.
+	 * @return
+	 */
+	public HorizontalLayout buildViewPart2() {
+		 /** Map view PART-2 **/
+	    HorizontalLayout mapHolderLayoutWrapper = new HorizontalLayout(buildMapHolder());
+	    mapHolderLayoutWrapper.setWidthFull();
+	    mapHolderLayoutWrapper.setJustifyContentMode(JustifyContentMode.CENTER);
+	    return mapHolderLayoutWrapper;
+	}
+	 
+	  
+	
 	public Button addResetButton() {
-		Button resetButton = new Button("Réinitialiser");
+		Button resetButton = new Button("Reset");
     	resetButton.addClickListener(event -> {
     		clearViews(false);
     	});
@@ -131,15 +152,16 @@ public class AventurierGameViewImpl extends HorizontalLayout {
     
     public Checkbox addSwitchButtonLiveMode() {
     	
-	   	liveModeSwitchButton = new Checkbox("Mode direct");
+	   	liveModeSwitchButton = new Checkbox("Live mode");
 	   	liveModeSwitchButton.setValue(false);
-	   	liveModeSwitchButton.setIndeterminate(false);	   	
+	   	liveModeSwitchButton.setIndeterminate(false);	  
 	
 	    // Add a value change listener
 	   	liveModeSwitchButton.addValueChangeListener(event -> {
 	          boolean isChecked = event.getValue();
 	          isLiveMode = isChecked;
 	          clearViews(true);
+	          submitPositionButton.setEnabled(false);
 	    });
 	
 	    return liveModeSwitchButton;
@@ -148,12 +170,8 @@ public class AventurierGameViewImpl extends HorizontalLayout {
     public VerticalLayout addAvaibleSpotsGrid() {
     	
     	VerticalLayout layout  = new VerticalLayout();
-    	
-    	String label = "Choisir une position de départ";
-    	Label gridDescription = new Label(label);
-    	layout.add(gridDescription);
    
-    	positionLabel = new Label();
+    	positionLabel = new Label("Choose a starting position");
     	layout.add(positionLabel);
 
     	  // Create a Grid to display the positions
@@ -169,17 +187,16 @@ public class AventurierGameViewImpl extends HorizontalLayout {
         // Add a selection listener to the Grid
         availableSpotsGrid.addSelectionListener(event -> {
             event.getFirstSelectedItem().ifPresent(selectedItem -> {
-            	            	
                 // Perform an action with the selected item
-            	positionLabel.setText( "Position choisie : (" +   selectedItem.getX() + "," + selectedItem.getY() + ")");
+            	positionLabel.setText( "Chosen position [" +   selectedItem.getX() + "," + selectedItem.getY() + "]");
             	gridSelectedPositionPoint = selectedItem;
-                Notification.show("Position choisie : (" + selectedItem.getX() + ", " + selectedItem.getY() + ")");
+                Notification.show("Chosen position [" + selectedItem.getX() + ", " + selectedItem.getY() + "]");
                 mapHolderCustomTextArea.setColorAtIndex(selectedItem.getX(), selectedItem.getY());
             });
         });
         layout.add(availableSpotsGrid);
         
-        layout.setAlignSelf(Alignment.CENTER, gridDescription);
+        layout.setAlignSelf(Alignment.CENTER, positionLabel);
         layout.setAlignSelf(Alignment.CENTER, availableSpotsGrid);
         layout.setAlignSelf(Alignment.CENTER, positionLabel);
 
@@ -190,110 +207,26 @@ public class AventurierGameViewImpl extends HorizontalLayout {
     public VerticalLayout addButtonsNSEW() {
         
     	Button northButton = new Button("Nord", VaadinIcon.ARROW_UP.create());
-    	northButton.addClickListener(event -> {
-            
-            if(gridSelectedPositionPoint == null) {
-                Notification.show("Veuillez choisir une position de départ !", 1000, Notification.Position.BOTTOM_END);
-            	return;
-            }
-            
-            String newLabel = nextPositionHolderTextArea.getValue().isEmpty() ? CardinalDirectionsEnum.NORD.getCode(): nextPositionHolderTextArea.getValue() 
-            	+ "-" + CardinalDirectionsEnum.NORD.getCode();
-            nextPositionHolderTextArea.setValue(newLabel);
-
-            if(isLiveMode) {
-            	Optional<Point> pos = controller.resolvePosition(this.map, gridSelectedPositionPoint, CardinalDirectionsEnum.NORD.getCode());
-            	if(pos.isPresent()) {
-            		gridSelectedPositionPoint = pos.get();
-            		Notification.show("Nouvelle position ("+pos.get().getX()+"," + pos.get().getY()+")", 1000, Notification.Position.BOTTOM_END);
-            		submitPositionButton.setText("Nouvelle position ( "+pos.get().getX()+"," + pos.get().getY()+")");
-                    mapHolderCustomTextArea.setColorAtIndex(pos.get().getX(), pos.get().getY());
-            	}else {
-            		Notification.show("Chemin illégal !", 1000, Notification.Position.MIDDLE);
-            	}
-            }
-            
-           
-   		 // if live mode is ON
-          //  this.controller.moveAventurier(CardinalDirectionsEnum.NORTH, grisSelectedPositionPoint);
-        });
+    	northButton.setId(""+CardinalDirectionsEnum.NORD.getCode() + "-button");
+    	northButton.addClickListener(this);
     	
     	Button southButton = new Button("Sud", VaadinIcon.ARROW_DOWN.create());
-    	southButton.addClickListener(event -> {
-
-    		if(gridSelectedPositionPoint == null) {
-                 Notification.show("Veuillez choisir une position de départ !", 1000, Notification.Position.BOTTOM_END);
-             	return;
-             }
-    		 String newLabel = nextPositionHolderTextArea.getValue().isEmpty() ? CardinalDirectionsEnum.SUD.getCode(): nextPositionHolderTextArea.getValue() 
-             	+ "-" + CardinalDirectionsEnum.SUD.getCode();
-             nextPositionHolderTextArea.setValue(newLabel);            
-    		 
-             if(isLiveMode) {
-             	Optional<Point> pos = controller.resolvePosition(this.map, gridSelectedPositionPoint, CardinalDirectionsEnum.SUD.getCode());
-             	if(pos.isPresent()) {
-             		gridSelectedPositionPoint = pos.get();
-             		Notification.show("Nouvelle position ("+pos.get().getX()+"," + pos.get().getY()+")", 1000, Notification.Position.BOTTOM_END);
-             		submitPositionButton.setText("Nouvelle position ( "+pos.get().getX()+"," + pos.get().getY()+")");
-                     mapHolderCustomTextArea.setColorAtIndex(pos.get().getX(), pos.get().getY());
-             	}else {
-             		Notification.show("Chemin illégal !", 1000, Notification.Position.MIDDLE);
-             	}
-             }
-        });
+    	southButton.setId(""+CardinalDirectionsEnum.SUD.getCode() + "-button");
+    	southButton.addClickListener(this);
+    	
     	Label label = new Label("Déplacer");
     	label.getElement().getStyle().set("padding-top", "10px");
     	label.getElement().getStyle().set("padding-left", "10px");
     	label.getElement().getStyle().set("padding-right", "10px");
 
         Button westButton = new Button("Ouest", VaadinIcon.ARROW_LEFT.create());
-        westButton.addClickListener(event -> {
-
-        	if(gridSelectedPositionPoint == null) {
-                 Notification.show("Veuillez choisir une position de départ !", 1000, Notification.Position.BOTTOM_END);
-             	return;
-             }
-    		 String newLabel = nextPositionHolderTextArea.getValue().isEmpty() ? CardinalDirectionsEnum.OUEST.getCode(): nextPositionHolderTextArea.getValue() 
-              	+ "-" + CardinalDirectionsEnum.OUEST.getCode();
-              nextPositionHolderTextArea.setValue(newLabel);       
-    		 
-              if(isLiveMode) {
-               	Optional<Point> pos = controller.resolvePosition(this.map, gridSelectedPositionPoint, CardinalDirectionsEnum.OUEST.getCode());
-               	if(pos.isPresent()) {
-               		gridSelectedPositionPoint = pos.get();
-               		Notification.show("Nouvelle position ("+pos.get().getX()+"," + pos.get().getY()+")", 1000, Notification.Position.BOTTOM_END);
-               		submitPositionButton.setText("Nouvelle position ( "+pos.get().getX()+"," + pos.get().getY()+")");
-                       mapHolderCustomTextArea.setColorAtIndex(pos.get().getX(), pos.get().getY());
-               	}else {
-               		Notification.show("Chemin illégal !", 1000, Notification.Position.MIDDLE);
-               	}
-               }
-        });
+        westButton.setId(""+CardinalDirectionsEnum.OUEST.getCode() + "-button");
+        westButton.addClickListener(this);
         
         Button eastButton = new Button("Est", VaadinIcon.ARROW_RIGHT.create());
-        eastButton.addClickListener(event -> {
-
-        	if(gridSelectedPositionPoint == null) {
-                 Notification.show("Veuillez choisir une position de départ !", 1000, Notification.Position.BOTTOM_END);
-             	return;
-             }
-    		 String newLabel = nextPositionHolderTextArea.getValue().isEmpty() ? CardinalDirectionsEnum.EST.getCode(): nextPositionHolderTextArea.getValue() 
-               	+ "-" + CardinalDirectionsEnum.EST.getCode();
-               nextPositionHolderTextArea.setValue(newLabel);  
-    		 
-               if(isLiveMode) {
-                  	Optional<Point> pos = controller.resolvePosition(this.map, gridSelectedPositionPoint, CardinalDirectionsEnum.EST.getCode());
-                  	if(pos.isPresent()) {
-                  		gridSelectedPositionPoint = pos.get();
-                  		Notification.show("Nouvelle position ("+pos.get().getX()+"," + pos.get().getY()+")", 1000, Notification.Position.BOTTOM_END);
-                  		submitPositionButton.setText("Nouvelle position ( "+pos.get().getX()+"," + pos.get().getY()+")");
-                        mapHolderCustomTextArea.setColorAtIndex(pos.get().getX(), pos.get().getY());
-                  	}else {
-                  		Notification.show("Chemin illégal !", 1000, Notification.Position.MIDDLE);
-                  	}
-                  }
-        });
-  
+        eastButton.setId(""+CardinalDirectionsEnum.EST.getCode() + "-button");
+        eastButton.addClickListener(this);
+        
         HorizontalLayout northButtonLayout = new HorizontalLayout();
         northButtonLayout.setAlignSelf(Alignment.CENTER, northButton);
         
@@ -321,23 +254,23 @@ public class AventurierGameViewImpl extends HorizontalLayout {
     
     public Button addSubmitPositionButton() {
     	
-        submitPositionButton = new Button("Soumettre position");
+        submitPositionButton = new Button("Submit position");
         submitPositionButton.addClickListener(event ->  {
         	if (gridSelectedPositionPoint == null) {
-        		Notification.show("Veuillez choisir une position de départ !", 1000, Notification.Position.BOTTOM_END);
+        		Notification.show("Please choose a starting position !", 1000, Notification.Position.BOTTOM_END);
         		return;
         	}
         	if (nextPositionHolderTextArea.getValue().isEmpty()) {
-        		Notification.show("Veuillez choisir le chemin à suivre !", 1000, Notification.Position.BOTTOM_END);
+        		Notification.show("Please choose a path to follow !", 1000, Notification.Position.BOTTOM_END);
         		return;
         	}
         	Optional<Point> pos = controller.resolvePosition(this.map, gridSelectedPositionPoint, nextPositionHolderTextArea.getValue());
         	if(pos.isPresent()) {
-        		Notification.show("Nouvelle position ("+pos.get().getX()+"," + pos.get().getY()+")", 1000, Notification.Position.BOTTOM_END);
-        		submitPositionButton.setText("Nouvelle position ( "+pos.get().getX()+"," + pos.get().getY()+")");
+        		Notification.show("New position ("+pos.get().getX()+"," + pos.get().getY()+")", 1000, Notification.Position.BOTTOM_END);
+        		submitPositionButton.setText("New position ["+pos.get().getX()+"," + pos.get().getY()+"]");
                 mapHolderCustomTextArea.setColorAtIndex(pos.get().getX(), pos.get().getY());
         	}else {
-        		Notification.show("Chemin illégal !", 1000, Notification.Position.MIDDLE);
+        		Notification.show("Illegal path !", 1000, Notification.Position.MIDDLE);
         	}
         	
         });
@@ -345,24 +278,86 @@ public class AventurierGameViewImpl extends HorizontalLayout {
 
     }
     
-    public CustomTextArea buildMapHolder() {
+    public VerticalLayout buildMapHolder() {
+    	VerticalLayout layout = new VerticalLayout();
+    	
+    	Label label = new Label("Adventurer Map");
+    	layout.add(label);
+        layout.setAlignSelf(Alignment.CENTER, label);
+
     	mapHolderCustomTextArea = new CustomTextArea();
-		mapHolderCustomTextArea.getElement().getStyle().set("font-family", "monospace");    	
-		return mapHolderCustomTextArea;
+    	layout.add(mapHolderCustomTextArea);
+        layout.setAlignSelf(Alignment.CENTER, mapHolderCustomTextArea);
+
+    	
+        generateRandomMap = new Button("Generate random map");
+        layout.add(generateRandomMap);
+        layout.setAlignSelf(Alignment.CENTER, generateRandomMap);
+
+
+		return layout;
     }
 
 	
    public void clearViews(boolean isFromSwitch) {
-	if(!isFromSwitch) {
-		liveModeSwitchButton.setValue(false);
-	}
-	nextPositionHolderTextArea.clear();
-	submitPositionButton.setText("Soumettre position");
-	positionLabel.setText("");
-	gridSelectedPositionPoint = null;
-	availableSpotsGrid.deselectAll();
-	mapHolderCustomTextArea.addTextFromLines(this.map.getLines());
+	   
+		if(!isFromSwitch) {
+			liveModeSwitchButton.setValue(false);
+			submitPositionButton.setEnabled(false);
+		}
+    	positionLabel.setText("Choose a starting position");
+		nextPositionHolderTextArea.clear();
+		submitPositionButton.setText("Submit position");
+		submitPositionButton.setEnabled(true);
+		gridSelectedPositionPoint = null;
+		availableSpotsGrid.deselectAll();
+		mapHolderCustomTextArea.addTextFromLines(this.map.getLines());
     }
+
+	public void cardinalButtonsCallBack(CardinalDirectionsEnum cardinalDirectionEnum) {
+	    
+	    if(gridSelectedPositionPoint == null) {
+	        Notification.show("Please choose a starting position !", 1000, Notification.Position.BOTTOM_END);
+	    	return;
+	    }
+	    
+	    String newLabel = nextPositionHolderTextArea.getValue().isEmpty() ? cardinalDirectionEnum.getCode(): nextPositionHolderTextArea.getValue() 
+	    	+ "-" + cardinalDirectionEnum.getCode();
+	    nextPositionHolderTextArea.setValue(newLabel);
+	
+	    if(isLiveMode) {
+	    	Optional<Point> pos = controller.resolvePosition(this.map, gridSelectedPositionPoint, cardinalDirectionEnum.getCode());
+	    	if(pos.isPresent()) {
+	    		gridSelectedPositionPoint = pos.get();
+	    		Notification.show("New position ["+pos.get().getX()+"," + pos.get().getY()+"]", 1000, Notification.Position.BOTTOM_END);
+	    		submitPositionButton.setText("New position ["+pos.get().getX()+"," + pos.get().getY()+"]");
+	            mapHolderCustomTextArea.setColorAtIndex(pos.get().getX(), pos.get().getY());
+	    	}else {
+	    		Notification.show("Illegal path !", 1000, Notification.Position.MIDDLE);
+	    	}
+	    }
+		    
+	}
+
+
+	@Override
+	public void onComponentEvent(ClickEvent<Button> event) {
+		System.out.println("component id >> " + event.getSource().getId().get());
+		Optional<String> optionalComponentId = event.getSource().getId();
+		if(optionalComponentId.isPresent()) {
+			
+			String componentId = optionalComponentId.get();
+			switch (componentId) {
+				case "N-button" -> cardinalButtonsCallBack(CardinalDirectionsEnum.NORD);
+				case "S-button" -> cardinalButtonsCallBack(CardinalDirectionsEnum.SUD);
+				case "E-button" -> cardinalButtonsCallBack(CardinalDirectionsEnum.EST);
+				case "O-button" -> cardinalButtonsCallBack(CardinalDirectionsEnum.OUEST);
+				default -> throw new IllegalArgumentException("Unexpected value: " + componentId);
+			}
+			
+		}
+	}
+
 
 
 }

@@ -24,10 +24,10 @@ public class PositionResolverServiceTest {
 	PositionResolverService positionResolverService;
 	
 	@Test
-	public void testResolveNextPos() {
+	public void testResolveNextPosOK() {
 		// act
 		Map map = new Map();
-		map.getAllMapPoints().add(new Point(9,2, true));
+		map.getAllMapPoints().add(new Point(9, 2, true));
 		Point startingPos = new Point( 3,0);
 		String pathToFollow = "S-S-S-S-E-E-E-E-E-E-N-N";
 		
@@ -36,6 +36,21 @@ public class PositionResolverServiceTest {
 		// verify
 		Assertions.assertNotNull(posResult.get());
 		Assertions.assertEquals(posResult.get().getX(), 9);
-		Assertions.assertEquals(posResult.get().getY(), 2);
+		Assertions.assertEquals(posResult.get().getY(), 2);		
+	}
+	
+	@Test
+	public void testResolveNextPosOK1() {
+		// act
+		Map map = new Map();
+		map.getAllMapPoints().add(new Point(2, 4, true));
+		Point startingPos = new Point( 3,0);
+		String pathToFollow = "S-O-N-E-S-O-S-S-S";
+		Optional<Point> posResult = positionResolverService.resolveNextPos(map, startingPos, pathToFollow);
+		
+		// verify
+		Assertions.assertNotNull(posResult.get());
+		Assertions.assertEquals(posResult.get().getX(), 2);
+		Assertions.assertEquals(posResult.get().getY(), 4);
 	}
 }
