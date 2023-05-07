@@ -1,7 +1,12 @@
 package com.aventurier.app.frontend.views.ccmp;
 
+import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.lang3.StringUtils;
+
+import com.aventurier.app.backend.business.model.Point;
+import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
@@ -14,15 +19,23 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 public class CustomTextArea extends VerticalLayout {
     
     private static final long serialVersionUID = -2896387779935200051L;
-	private List<String> lines;
+    private static String ADVENTURER_CHAR = "A";
+    private static String CROSSABLE_POINT_CHAR = "-";
+    private static String UNCROSSABLE_POINT_STYLE_COLOR = "#07f22e";
+    private static String CROSSABLE_POINT_STYLE_COLOR = "black";
+    private static String DEFAULT_ALL_POINT_FONT_SIZE = "20px"; //16px
+    private static String DEFAULT_ALL_POINT_FONT_WEIGHT = "bold";
+    private static String CROSSABLE_POINT_FONT_WEIGHT = "normal";
+
 	private Div parentDiv;
     
     public CustomTextArea() {
 		
     	addClassName("border-vertical-layout"); //border
-    	setWidth("230px");
+    	setWidth("280px"); //230px
         
     	parentDiv = new Div();
+    	parentDiv.setId("map-parent-div");
     	add(resetDivStyle());
     }
 		
@@ -33,55 +46,69 @@ public class CustomTextArea extends VerticalLayout {
 			Div line = new Div();
             for (char c : str.toCharArray()) {
                 String charAsString = Character.toString(c);
-                if(" ".equals(charAsString)) {
+                Span characterSpan = new Span();
+                if(" ".equals(charAsString)) { // crossable point style
+                	characterSpan.getElement().getStyle().set("color", CROSSABLE_POINT_STYLE_COLOR);
                 	charAsString = "-";
+                }else { // uncrossable point style
+                	characterSpan.getElement().getStyle().set("color", UNCROSSABLE_POINT_STYLE_COLOR);
                 }
-                Span characterSpan = new Span(charAsString);
-                characterSpan.setId(""+index);
+            	characterSpan.getElement().getStyle().set("font-size", DEFAULT_ALL_POINT_FONT_SIZE); 
+            	characterSpan.getElement().getStyle().set("font-weight", DEFAULT_ALL_POINT_FONT_WEIGHT); 
+                characterSpan.setText(charAsString);
+                characterSpan.setId(""+index);                
                 characterSpan.getElement().getStyle().set("white-space", "pre");
                 line.add(characterSpan);
                 index++;
             }
             parentDiv.add(line);
         }
-		this.lines = lines;
 	}
 	
-	/*TO DO improve func*/
-	public void setColorAtIndex(int x, int y) {
-    
-		parentDiv.removeAll();
-		resetDivStyle();
+	public void setColorAtIndex(Point previousPoint, Point currentPoint ) {
 		
-        int c = 0;
-		for (String str : lines) {
-			Div line = new Div();
-			int k =0;
-            for (char chr : str.toCharArray()) {
-                String charAsString = Character.toString(chr);
-                if(" ".equals(charAsString)) {
-                	charAsString = "-";
-                }
-                Span characterSpan = new Span(charAsString);
-                characterSpan.getElement().getStyle().set("white-space", "pre");
-                line.add(characterSpan);
-                
-                if(x == k && y == c) {
-                	characterSpan.setText("A");
-                	characterSpan.getElement().getStyle().set("color", "red");
-                	characterSpan.getElement().getStyle().set("font-size", "10px");
-                }
-                k++;
-            }
-            parentDiv.add(line);
-            c++;
-        }
-               
+		List<Component> allChildren = new ArrayList<>();
+		
+		collectChildren(parentDiv, allChildren);
+		
+		allChildren.forEach(child -> {
+		   
+		    if(child instanceof Span) {
+		    	Span span = (Span) child;
+		    	if(span.getId().isPresent()) {
+		    		String spanId = span.getId().get();
+		    		
+		    		// reset previous point style
+		    		if(previousPoint != null && StringUtils.equals(spanId, ""+previousPoint.getIndex())) {
+		    			span.setText(CROSSABLE_POINT_CHAR);
+		    			span.getElement().getStyle().set("color", CROSSABLE_POINT_STYLE_COLOR);
+	                	span.getElement().getStyle().set("font-size", DEFAULT_ALL_POINT_FONT_SIZE); 
+		            	span.getElement().getStyle().set("font-weight", DEFAULT_ALL_POINT_FONT_WEIGHT); 
+		    		}
+		    		
+		    		// change current point style
+		    		if(StringUtils.equals(spanId, ""+currentPoint.getIndex())) {
+		    			span.setText(ADVENTURER_CHAR);
+		    			span.getElement().getStyle().set("color", "red");
+		    			span.getElement().getStyle().set("font-size", "16px");
+		            	span.getElement().getStyle().set("font-weight", CROSSABLE_POINT_FONT_WEIGHT); 
+		    		}
+		    	}
+		    }
+		});
+    }
+	
+	private void collectChildren(Component parent, List<Component> allChildren) {
+        parent.getChildren().forEach(child -> {
+            allChildren.add(child);
+            collectChildren(child, allChildren);
+        });
     }
 	
 	public Div resetDivStyle() {
-		parentDiv.setWidth("215px") ; 
-		parentDiv.setHeight("520px"); // 460 
+		parentDiv.removeAll();
+		parentDiv.setWidth("300px") ; // 215px 
+		parentDiv.setHeight("650px"); // 520 
 		parentDiv.getElement().getStyle().set("font-family", "monospace");
 		return parentDiv;
 	}

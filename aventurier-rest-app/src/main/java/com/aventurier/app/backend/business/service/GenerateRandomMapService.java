@@ -9,7 +9,11 @@ import org.springframework.stereotype.Service;
 import com.aventurier.app.backend.business.model.Map;
 import com.aventurier.app.backend.business.model.Point;
 
+import lombok.extern.log4j.Log4j2;
+
+
 @Service
+@Log4j2
 public class GenerateRandomMapService {
 	
 	public Map generateNewRandomMap() {
@@ -37,7 +41,7 @@ public class GenerateRandomMapService {
             StringBuilder newRow = new StringBuilder();
             for (int j = 0; j < numCols; j++) {
             	Character chr = mapChars.remove(mapChars.size() - 1);
-            	System.out.println("mapChars.remove(mapChars.size() - 1) > ["+chr+"]");
+            	log.info("CHAR TO ADD: > ["+chr+"]");
             	Point point = new Point(j, i);
             	point.setIndex(index);
                 if( " ".equals(chr.toString()) ) {
@@ -49,7 +53,7 @@ public class GenerateRandomMapService {
                 newRow.append(chr);
                 index++;
             }
-            System.out.println("newRow.toString() > ["+newRow.toString()+"]");
+            log.info("NEW ROW: ["+newRow.toString()+"]");
             map.getLines().add(newRow.toString());
         }
 

@@ -1,8 +1,6 @@
 package com.aventurier.app.frontend.views.aventuriergameview;
 
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.List;
 import java.util.Optional;
 
 import com.aventurier.app.backend.business.enums.CardinalDirectionsEnum;
@@ -26,11 +24,14 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.router.RouteAlias;
 
+import lombok.extern.log4j.Log4j2;
+
 /***
  * 
  * @author motmani
  *
  */
+@Log4j2
 @PageTitle(" The Adventurer game ")
 @Route(value = "adventurer", layout = MainLayout.class)
 @RouteAlias(value = "", layout = MainLayout.class)
@@ -44,12 +45,13 @@ public class AventurierGameViewImpl extends HorizontalLayout  implements Compone
 	private TextArea nextPositionHolderTextArea;
 	private Checkbox liveModeSwitchButton;
 	private Button submitPositionButton;
-	private Point gridSelectedPositionPoint;    
 	private Grid<Point> availableSpotsGrid;
 	private CustomTextArea mapHolderCustomTextArea;
 	private Label positionLabel;
 	private boolean isLiveMode;
 	private Button generateRandomMapButton;
+	private Point currentSelectedPositionPoint;    
+	private Point previousSelectedPositionPoint;    
 
  
     public AventurierGameViewImpl(AventurierGameController controller) {
@@ -66,9 +68,9 @@ public class AventurierGameViewImpl extends HorizontalLayout  implements Compone
 
 	public void initData(Map map) {
 		this.map = map;	
-		System.out.println("[map all popints] >>  "+ map.getAllMapPoints().size());
-		System.out.println("[map uncrossable points] >> "+map.getUnCrossablePoints().size());
-		System.out.println("[map crossable points] >> "+map.getCrossablePoints().size());
+		log.info("[map all popints] >>  "+ map.getAllMapPoints().size());
+		log.info("[map uncrossable points] >> "+map.getUnCrossablePoints().size());
+		log.info("[map crossable points] >> "+map.getCrossablePoints().size());
 		
         mapHolderCustomTextArea.addTextFromLines(this.map.getLines());
 		availableSpotsGrid.setItems(this.map.getCrossablePoints());
@@ -188,9 +190,10 @@ public class AventurierGameViewImpl extends HorizontalLayout  implements Compone
             event.getFirstSelectedItem().ifPresent(selectedItem -> {
                 // Perform an action with the selected item
             	positionLabel.setText( "Chosen position [" +   selectedItem.getX() + "," + selectedItem.getY() + "]");
-            	gridSelectedPositionPoint = selectedItem;
+            	previousSelectedPositionPoint = currentSelectedPositionPoint;
+            	currentSelectedPositionPoint = selectedItem;
                 Notification.show("Chosen position [" + selectedItem.getX() + ", " + selectedItem.getY() + "]");
-                mapHolderCustomTextArea.setColorAtIndex(selectedItem.getX(), selectedItem.getY());
+                mapHolderCustomTextArea.setColorAtIndex(previousSelectedPositionPoint, currentSelectedPositionPoint);
             });
         });
         layout.add(availableSpotsGrid);
@@ -255,7 +258,7 @@ public class AventurierGameViewImpl extends HorizontalLayout  implements Compone
     	
         submitPositionButton = new Button("Submit position");
         submitPositionButton.addClickListener(event ->  {
-        	if (gridSelectedPositionPoint == null) {
+        	if (currentSelectedPositionPoint == null) {
         		Notification.show("Please choose a starting position !", 1000, Notification.Position.BOTTOM_END);
         		return;
         	}
@@ -263,11 +266,11 @@ public class AventurierGameViewImpl extends HorizontalLayout  implements Compone
         		Notification.show("Please choose a path to follow !", 1000, Notification.Position.BOTTOM_END);
         		return;
         	}
-        	Optional<Point> pos = controller.resolvePosition(this.map, gridSelectedPositionPoint, nextPositionHolderTextArea.getValue());
+        	Optional<Point> pos = controller.resolvePosition(this.map, currentSelectedPositionPoint, nextPositionHolderTextArea.getValue());
         	if(pos.isPresent()) {
         		Notification.show("New position ("+pos.get().getX()+"," + pos.get().getY()+")", 1000, Notification.Position.BOTTOM_END);
         		submitPositionButton.setText("New position ["+pos.get().getX()+"," + pos.get().getY()+"]");
-                mapHolderCustomTextArea.setColorAtIndex(pos.get().getX(), pos.get().getY());
+                mapHolderCustomTextArea.setColorAtIndex(previousSelectedPositionPoint, currentSelectedPositionPoint);
         	}else {
         		Notification.show("Illegal path !", 1000, Notification.Position.MIDDLE);
         	}
@@ -300,6 +303,8 @@ public class AventurierGameViewImpl extends HorizontalLayout  implements Compone
 	
    public void clearViews(boolean isFromSwitch) {
 	  
+	  nextPositionHolderTextArea.clear();
+
 	  // action from RESET button and checkbox 
 	  if(isLiveMode && isFromSwitch) {
 		  submitPositionButton.setText("Submit position");	 
@@ -316,8 +321,8 @@ public class AventurierGameViewImpl extends HorizontalLayout  implements Compone
 		positionLabel.setText("Choose a starting position");
 		submitPositionButton.setText("Submit position");	
 		submitPositionButton.setEnabled(true);
-		nextPositionHolderTextArea.clear();
-		gridSelectedPositionPoint = null;
+		currentSelectedPositionPoint = null;
+    	previousSelectedPositionPoint = null;
 		availableSpotsGrid.deselectAll();
 		mapHolderCustomTextArea.addTextFromLines(this.map.getLines());
 		
@@ -328,22 +333,22 @@ public class AventurierGameViewImpl extends HorizontalLayout  implements Compone
 
 	public void cardinalButtonsCallBack(CardinalDirectionsEnum cardinalDirectionEnum) {
 	    
-	    if(gridSelectedPositionPoint == null) {
+	    if(currentSelectedPositionPoint == null) {
 	        Notification.show("Please choose a starting position !", 1000, Notification.Position.BOTTOM_END);
 	    	return;
 	    }
-	    
+	    previousSelectedPositionPoint = currentSelectedPositionPoint;
 	    String newLabel = nextPositionHolderTextArea.getValue().isEmpty() ? cardinalDirectionEnum.getCode(): nextPositionHolderTextArea.getValue() 
 	    	+ "-" + cardinalDirectionEnum.getCode();
 	    nextPositionHolderTextArea.setValue(newLabel);
 	
 	    if(isLiveMode) {
-	    	Optional<Point> pos = controller.resolvePosition(this.map, gridSelectedPositionPoint, cardinalDirectionEnum.getCode());
+	    	Optional<Point> pos = controller.resolvePosition(this.map, currentSelectedPositionPoint, cardinalDirectionEnum.getCode());
 	    	if(pos.isPresent()) {
-	    		gridSelectedPositionPoint = pos.get();
+	    		currentSelectedPositionPoint = pos.get();
 	    		Notification.show("New position ["+pos.get().getX()+"," + pos.get().getY()+"]", 1000, Notification.Position.BOTTOM_END);
 	    		submitPositionButton.setText("New position ["+pos.get().getX()+"," + pos.get().getY()+"]");
-	            mapHolderCustomTextArea.setColorAtIndex(pos.get().getX(), pos.get().getY());
+                mapHolderCustomTextArea.setColorAtIndex(previousSelectedPositionPoint, currentSelectedPositionPoint);
 	    	}else {
 	    		Notification.show("Illegal path !", 1000, Notification.Position.MIDDLE);
 	    	}
@@ -368,7 +373,7 @@ public class AventurierGameViewImpl extends HorizontalLayout  implements Compone
 
 	@Override
 	public void onComponentEvent(ClickEvent<Button> event) {
-		System.out.println("component id >> " + event.getSource().getId().get());
+		log.info("component id >> " + event.getSource().getId().get());
 		Optional<String> optionalComponentId = event.getSource().getId();
 		if(optionalComponentId.isPresent()) {
 			
