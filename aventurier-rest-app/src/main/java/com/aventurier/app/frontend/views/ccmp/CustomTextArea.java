@@ -107,8 +107,8 @@ public class CustomTextArea extends VerticalLayout {
 	
 	public Div resetDivStyle() {
 		parentDiv.removeAll();
-		parentDiv.setWidth("300px") ; // 215px 
-		parentDiv.setHeight("650px"); // 520 
+		parentDiv.setWidth("300px") ; 
+		parentDiv.setHeight("650px"); 
 		parentDiv.getElement().getStyle().set("font-family", "monospace");
 		return parentDiv;
 	}
