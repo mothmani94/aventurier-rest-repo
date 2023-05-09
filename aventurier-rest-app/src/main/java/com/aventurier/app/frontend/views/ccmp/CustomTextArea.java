@@ -21,13 +21,14 @@ public class CustomTextArea extends VerticalLayout {
     private static final long serialVersionUID = -2896387779935200051L;
     private static String ADVENTURER_CHAR = "A";
     private static String CROSSABLE_POINT_CHAR = "-";
-    private static String UNCROSSABLE_POINT_STYLE_COLOR = "#07f22e";
+    private static String UNCROSSABLE_POINT_STYLE_COLOR = "#05c8ff";
     private static String CROSSABLE_POINT_STYLE_COLOR = "black";
-    private static String DEFAULT_ALL_POINT_FONT_SIZE = "20px"; //16px
+    private static String DEFAULT_ALL_POINT_FONT_SIZE = "20px"; 
     private static String DEFAULT_ALL_POINT_FONT_WEIGHT = "bold";
     private static String CROSSABLE_POINT_FONT_WEIGHT = "normal";
 
 	private Div parentDiv;
+	private Span previousSpan;
     
     public CustomTextArea() {
 		
@@ -65,7 +66,15 @@ public class CustomTextArea extends VerticalLayout {
         }
 	}
 	
-	public void setColorAtIndex(Point previousPoint, Point currentPoint ) {
+	public void setColorAtIndex(Point currentPoint ) {
+		
+		// reset style for previous element/span
+		if(previousSpan != null) {
+			previousSpan.setText(CROSSABLE_POINT_CHAR);
+			previousSpan.getElement().getStyle().set("color", CROSSABLE_POINT_STYLE_COLOR);
+			previousSpan.getElement().getStyle().set("font-size", DEFAULT_ALL_POINT_FONT_SIZE); 
+			previousSpan.getElement().getStyle().set("font-weight", DEFAULT_ALL_POINT_FONT_WEIGHT); 
+		}
 		
 		List<Component> allChildren = new ArrayList<>();
 		
@@ -79,19 +88,24 @@ public class CustomTextArea extends VerticalLayout {
 		    		String spanId = span.getId().get();
 		    		
 		    		// reset previous point style
-		    		if(previousPoint != null && StringUtils.equals(spanId, ""+previousPoint.getIndex())) {
+		    		/*if(previousPoint != null && StringUtils.equals(spanId, ""+previousPoint.getIndex())) {
 		    			span.setText(CROSSABLE_POINT_CHAR);
 		    			span.getElement().getStyle().set("color", CROSSABLE_POINT_STYLE_COLOR);
 	                	span.getElement().getStyle().set("font-size", DEFAULT_ALL_POINT_FONT_SIZE); 
 		            	span.getElement().getStyle().set("font-weight", DEFAULT_ALL_POINT_FONT_WEIGHT); 
-		    		}
+		    		}*/
+		    		
 		    		
 		    		// change current point style
 		    		if(StringUtils.equals(spanId, ""+currentPoint.getIndex())) {
+		    					    			
 		    			span.setText(ADVENTURER_CHAR);
 		    			span.getElement().getStyle().set("color", "red");
 		    			span.getElement().getStyle().set("font-size", "16px");
 		            	span.getElement().getStyle().set("font-weight", CROSSABLE_POINT_FONT_WEIGHT); 
+		            	
+		    			previousSpan = span;
+
 		    		}
 		    	}
 		    }

@@ -51,7 +51,6 @@ public class AventurierGameViewImpl extends HorizontalLayout  implements Compone
 	private boolean isLiveMode;
 	private Button generateRandomMapButton;
 	private Point currentSelectedPositionPoint;    
-	private Point previousSelectedPositionPoint;    
 
  
     public AventurierGameViewImpl(AventurierGameController controller) {
@@ -190,10 +189,9 @@ public class AventurierGameViewImpl extends HorizontalLayout  implements Compone
             event.getFirstSelectedItem().ifPresent(selectedItem -> {
                 // Perform an action with the selected item
             	positionLabel.setText( "Chosen position [" +   selectedItem.getX() + "," + selectedItem.getY() + "]");
-            	previousSelectedPositionPoint = currentSelectedPositionPoint;
             	currentSelectedPositionPoint = selectedItem;
                 Notification.show("Chosen position [" + selectedItem.getX() + ", " + selectedItem.getY() + "]");
-                mapHolderCustomTextArea.setColorAtIndex(previousSelectedPositionPoint, currentSelectedPositionPoint);
+                mapHolderCustomTextArea.setColorAtIndex(currentSelectedPositionPoint);
             });
         });
         layout.add(availableSpotsGrid);
@@ -257,25 +255,8 @@ public class AventurierGameViewImpl extends HorizontalLayout  implements Compone
     public Button addSubmitPositionButton() {
     	
         submitPositionButton = new Button("Submit position");
-        submitPositionButton.addClickListener(event ->  {
-        	if (currentSelectedPositionPoint == null) {
-        		Notification.show("Please choose a starting position !", 1000, Notification.Position.BOTTOM_END);
-        		return;
-        	}
-        	if (nextPositionHolderTextArea.getValue().isEmpty()) {
-        		Notification.show("Please choose a path to follow !", 1000, Notification.Position.BOTTOM_END);
-        		return;
-        	}
-        	Optional<Point> pos = controller.resolvePosition(this.map, currentSelectedPositionPoint, nextPositionHolderTextArea.getValue());
-        	if(pos.isPresent()) {
-        		Notification.show("New position ("+pos.get().getX()+"," + pos.get().getY()+")", 1000, Notification.Position.BOTTOM_END);
-        		submitPositionButton.setText("New position ["+pos.get().getX()+"," + pos.get().getY()+"]");
-                mapHolderCustomTextArea.setColorAtIndex(previousSelectedPositionPoint, currentSelectedPositionPoint);
-        	}else {
-        		Notification.show("Illegal path !", 1000, Notification.Position.MIDDLE);
-        	}
-        	
-        });
+        submitPositionButton.setId("submit-position-button");
+        submitPositionButton.addClickListener(this);
         return submitPositionButton;
 
     }
@@ -322,7 +303,6 @@ public class AventurierGameViewImpl extends HorizontalLayout  implements Compone
 		submitPositionButton.setText("Submit position");	
 		submitPositionButton.setEnabled(true);
 		currentSelectedPositionPoint = null;
-    	previousSelectedPositionPoint = null;
 		availableSpotsGrid.deselectAll();
 		mapHolderCustomTextArea.addTextFromLines(this.map.getLines());
 		
@@ -337,7 +317,6 @@ public class AventurierGameViewImpl extends HorizontalLayout  implements Compone
 	        Notification.show("Please choose a starting position !", 1000, Notification.Position.BOTTOM_END);
 	    	return;
 	    }
-	    previousSelectedPositionPoint = currentSelectedPositionPoint;
 	    String newLabel = nextPositionHolderTextArea.getValue().isEmpty() ? cardinalDirectionEnum.getCode(): nextPositionHolderTextArea.getValue() 
 	    	+ "-" + cardinalDirectionEnum.getCode();
 	    nextPositionHolderTextArea.setValue(newLabel);
@@ -348,7 +327,7 @@ public class AventurierGameViewImpl extends HorizontalLayout  implements Compone
 	    		currentSelectedPositionPoint = pos.get();
 	    		Notification.show("New position ["+pos.get().getX()+"," + pos.get().getY()+"]", 1000, Notification.Position.BOTTOM_END);
 	    		submitPositionButton.setText("New position ["+pos.get().getX()+"," + pos.get().getY()+"]");
-                mapHolderCustomTextArea.setColorAtIndex(previousSelectedPositionPoint, currentSelectedPositionPoint);
+                mapHolderCustomTextArea.setColorAtIndex(currentSelectedPositionPoint);
 	    	}else {
 	    		Notification.show("Illegal path !", 1000, Notification.Position.MIDDLE);
 	    	}
@@ -370,6 +349,27 @@ public class AventurierGameViewImpl extends HorizontalLayout  implements Compone
 		clearViews(false);
 		initData(controller.readFile());
 	}
+	
+	public void submitPositionButtonCallBack() {
+		if (currentSelectedPositionPoint == null) {
+    		Notification.show("Please choose a starting position !", 1000, Notification.Position.BOTTOM_END);
+    		return;
+    	}
+    	if (nextPositionHolderTextArea.getValue().isEmpty()) {
+    		Notification.show("Please choose a path to follow !", 1000, Notification.Position.BOTTOM_END);
+    		return;
+    	}
+    	Optional<Point> pos = controller.resolvePosition(this.map, currentSelectedPositionPoint, nextPositionHolderTextArea.getValue());
+    	if(pos.isPresent()) {
+    		currentSelectedPositionPoint = pos.get();
+    		Notification.show("New position ("+pos.get().getX()+"," + pos.get().getY()+")", 1000, Notification.Position.BOTTOM_END);
+    		submitPositionButton.setText("New position ["+pos.get().getX()+"," + pos.get().getY()+"]");
+            mapHolderCustomTextArea.setColorAtIndex(currentSelectedPositionPoint);
+            nextPositionHolderTextArea.clear();
+    	}else {
+    		Notification.show("Illegal path !", 1000, Notification.Position.MIDDLE);
+    	}
+	}
 
 	@Override
 	public void onComponentEvent(ClickEvent<Button> event) {
@@ -383,6 +383,7 @@ public class AventurierGameViewImpl extends HorizontalLayout  implements Compone
 				case "S-button" -> cardinalButtonsCallBack(CardinalDirectionsEnum.SUD);
 				case "E-button" -> cardinalButtonsCallBack(CardinalDirectionsEnum.EST);
 				case "O-button" -> cardinalButtonsCallBack(CardinalDirectionsEnum.OUEST);
+				case "submit-position-button" -> submitPositionButtonCallBack();
 				case "random-map-button" -> generateRandomMap();
 				default -> throw new IllegalArgumentException("Unexpected value: " + componentId);
 			}
