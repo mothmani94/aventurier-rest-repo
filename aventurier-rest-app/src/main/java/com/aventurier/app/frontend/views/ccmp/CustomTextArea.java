@@ -26,7 +26,6 @@ public class CustomTextArea extends VerticalLayout {
     private static String DEFAULT_ALL_POINT_FONT_SIZE = "20px"; 
     private static String DEFAULT_ALL_POINT_FONT_WEIGHT = "bold";
     private static String CROSSABLE_POINT_FONT_WEIGHT = "normal";
-
 	private Div parentDiv;
 	private Span previousSpan;
     
@@ -86,16 +85,7 @@ public class CustomTextArea extends VerticalLayout {
 		    	Span span = (Span) child;
 		    	if(span.getId().isPresent()) {
 		    		String spanId = span.getId().get();
-		    		
-		    		// reset previous point style
-		    		/*if(previousPoint != null && StringUtils.equals(spanId, ""+previousPoint.getIndex())) {
-		    			span.setText(CROSSABLE_POINT_CHAR);
-		    			span.getElement().getStyle().set("color", CROSSABLE_POINT_STYLE_COLOR);
-	                	span.getElement().getStyle().set("font-size", DEFAULT_ALL_POINT_FONT_SIZE); 
-		            	span.getElement().getStyle().set("font-weight", DEFAULT_ALL_POINT_FONT_WEIGHT); 
-		    		}*/
-		    		
-		    		
+		    			    		
 		    		// change current point style
 		    		if(StringUtils.equals(spanId, ""+currentPoint.getIndex())) {
 		    					    			
